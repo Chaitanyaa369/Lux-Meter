@@ -1,0 +1,4 @@
+test 1
+comment out before and after 
+chartT.series[0].addPoint([x, y], true, false, true);
+

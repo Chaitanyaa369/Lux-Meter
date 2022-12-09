@@ -12,6 +12,7 @@
 BH1750 lightMeter;
 
 //Variables
+const int buttonPin = 2;
 int i = 0;
 int statusCode;
 const char* ssid = "Default_SSID";
@@ -19,6 +20,10 @@ const char* passphrase = "Default_Password";
 String st;
 String content;
 
+int led = 14;
+float sensorMax;
+int lastTime= 0;
+float calibValue;
 
 //Function Decalration
 bool testWifi(void);
@@ -31,6 +36,7 @@ AsyncWebServer server(80);
 bool testWifi(void);
 void launchWeb(void);
 void setupAP(void);
+bool calibration();
 String readLux();
 
 
@@ -47,6 +53,10 @@ void setup(){
   delay(10);
   //---------------
   Wire.begin();
+
+  pinMode(buttonPin,INPUT);
+  pinMode(led, OUTPUT);
+  
   bool status; 
   // default settings
   // (you can also pass in a Wire library object like &Wire2)
@@ -56,9 +66,11 @@ void setup(){
     while (1);
   }
 
-  // Initialize SPIFFS
+  
+
+  // Initialize LittleFS
   if(!LittleFS.begin()){
-    Serial.println("An Error has occurred while mounting SPIFFS");
+    Serial.println("An Error has occurred while mounting LittleFS");
     return;
   }
 
@@ -91,8 +103,11 @@ void setup(){
     // Print ESP8266 Local IP Address
   Serial.println(WiFi.localIP());
   
-
   // Route for root / web page
+  /*server.on("/calib",HTTP_GET, [](AsyncWebServerRequest *request){
+    sensorMax = calibration();
+    request->send(200,"text/plain", "/index.html");
+  });*/
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(LittleFS, "/index.html");
   });
@@ -118,7 +133,8 @@ void setup(){
   /* WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to WiFi..");
+    Serial.println("Connecting to WiFi..");.
+    
   }*/
 
   
@@ -126,29 +142,55 @@ void setup(){
 
 //----------------------------------Loop
 void loop(){
-  float lux = lightMeter.readLightLevel();
-  Serial.print("Light: ");
-  Serial.print(lux);
-  Serial.println(" lx");
-  delay(1000);
+  //float lux = lightMeter.readLightLevel();
+  //Serial.print("Light: ");
+  //Serial.print(lux);
+  //Serial.println(" lx");
+  //delay(200);
+if(digitalRead(buttonPin) == HIGH){
+    calibration();
+    Serial.println("Calibrated Value is:");
+    Serial.println(sensorMax);
+    
+  }
+  else{
+    Serial.println("Intensity");
+    Serial.println(readLux());
+  }
+
   
 }
 
 String readLux() {
   // Read lux
   float t = lightMeter.readLightLevel();
+  //if(calibration() == true){
+  t = (t/sensorMax)*100;
+  Serial.println(t);
+  return String(t);
+  //}
+  //else{
+    //return String(t);
+  //}
   
-  if (isnan(t)) {    
-    Serial.println("Failed to read from BH1750 sensor!");
-    return "";
-
-  }
-  else {
-    Serial.println(t);
-    return String(t);
-  }
 }
 
+//--------------Calibration
+bool calibration(){
+  float v;
+  lastTime = millis();
+  while(millis() - lastTime < 15000){
+    v = lightMeter.readLightLevel();
+    //Serial.println(".");
+    if(v >sensorMax){
+      sensorMax = v;
+      Serial.println(sensorMax);
+            
+    }
+    digitalWrite(led,HIGH);
+  }
+  return true;
+}
 //----------------------------------------------- Fuctions used for WiFi credentials saving and connecting to it which you do not need to change
 bool testWifi(void)
 {
@@ -245,7 +287,7 @@ void createWebServer()
       content += st;
       content += "</p><form method='get' action='setting'><label>SSID: </label><input type='text' name='ssid' length=32>";
       content += "<label>Password: </label><input type='password' name='pass' length=64>";
-      content +="<input type='submit'></form>";
+      content +="<input name = Submit' type='submit'></form>";
       content += "</html>";
       request->send(200, "text/html", content);
     });
