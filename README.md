@@ -1,23 +1,6 @@
 💡 Lux Meter with ESP8266
 
 This project is a web-based Lux Meter built using an ESP8266 microcontroller. It measures light intensity using a light sensor and displays the data graphically in real-time through a web interface. The design includes firmware, HTML/JS/CSS for visualization, and a custom-designed PCB.
-📦 Project Structure
-
-Lux-Meter/
-│
-├── Lux_meter/
-|   ├── Lux_meter.ino             # Firmware for ESP8266
-|   ├── index.html                # Web interface to visualize Lux data
-|   ├── style.css                 # Styling for the web interface
-│
-├── Lux_Meter.sch             # Schematic file (Eagle)
-├── Lux_Meter.brd             # PCB layout file (Eagle)
-├── LM-Top.pdf                # PCB top view
-├── LM-Bottom.pdf             # PCB bottom view
-├── LM-C_name_value.pdf       # Component name/value placement
-├── LM -components.pdf        # Components and connections
-│
-└── README.md                 # This file
 
 🧠 Features
 
